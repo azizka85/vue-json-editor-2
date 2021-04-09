@@ -1,0 +1,10 @@
+@import 'node_modules/bootstrap/scss/bootstrap.scss';
+@import 'node_modules/bootstrap-vue/src/index.scss';
+
+.expand-collapse {
+  cursor: pointer;
+}
+
+.expand-collapse * {
+  transition: all 0.5s ease-in-out;  
+}

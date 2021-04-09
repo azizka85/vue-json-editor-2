@@ -1,0 +1,199 @@
+<template>
+  <b-container>
+    <div class="ml-2 mr-2 mb-2 mt-2 d-flex flex-lg-row flex-column-reverse">
+      <div class="mr-lg-1 mt-2 mt-lg-0 col-lg-8 d-flex flex-column">
+        <h5>JSON Output</h5>
+        <p>
+          Below the raw JSON {{ !showSchema ? 'data' : 'schema' }}
+          <b-button 
+            class="ml-2"
+            size="sm"
+            variant="outline-primary" 
+            @click="toggleShowSchema"
+          >
+            Show {{ showSchema ? 'data' : 'schema' }}
+          </b-button>
+        </p>     
+        <b-form-textarea 
+          v-if="!showSchema"
+          max-rows="1000" 
+          :value="jsonData"
+          class="flex-fill"
+          @input="updateJsonData"
+        />        
+        <b-form-textarea 
+          v-if="showSchema"
+          max-rows="1000" 
+          :value="jsonSchema"
+          class="flex-fill"
+          @input="updateJsonSchema"
+        />
+      </div>
+      <div class="ml-lg-1 mb-2 mb-lg-0 col-lg-4">
+        <h5>Editor</h5>
+        <p>Below is the editor generated from the JSON data and schema</p>
+        <template v-if="data">
+          <b-form>
+            <component 
+              v-for="(value, key) in data"
+              :key="key"
+              :is="fieldSchemaType(key, value, schema)"
+              :data="data"
+              :schema="fieldSchema(key, schema)"
+              :name="key"
+              :value="value"
+            />
+          </b-form>
+        </template>
+      </div>
+    </div>   
+  </b-container>  
+</template>
+
+<script>
+import Vue from 'vue';
+import { BContainer, BFormTextarea, BButton, BForm } from 'bootstrap-vue';
+
+export default {
+  name: 'Editor',
+  data: () => ({
+    showSchema: false,
+    data: {
+      name: false
+    },
+    jsonData: '',
+    schema: {
+      name: {
+        description: 'Helo'
+      }
+    },
+    jsonSchema: ''
+  }),
+  methods: {
+    toggleShowSchema() {
+      this.showSchema = !this.showSchema;
+    },
+    updateJsonData(json) {
+      this.setJsonData(json);
+      this.setData(json);
+    },
+    setJsonData(json) {
+      let data = '';
+      
+      if(json) {
+        if(typeof json === "object") {
+          data = JSON.stringify(json, null, 2);
+        } else {
+          data = json;
+        }        
+      }
+
+      this.jsonData = data;
+    },
+    setData(json) {
+      let data = null;
+
+      if(typeof json === "string") {
+        try {
+          data = JSON.parse(json);
+        } catch(e) { }
+      } else {
+        data = json;
+      }
+
+      this.data = data;
+    },
+    updateJsonSchema(json) {
+      this.setJsonSchema(json);
+      this.setSchema(json);
+    },
+    setJsonSchema(json) {
+      let data = '';
+      
+      if(json) {
+        if(typeof json === "object") {
+          data = JSON.stringify(json, null, 2);
+        } else {
+          data = json;
+        }        
+      }
+
+      this.jsonSchema = data;
+    },
+    setSchema(json) {
+      let data = null;
+
+      if(typeof json === "string") {
+        try {
+          data = JSON.parse(json);
+        } catch(e) { }
+      } else {
+        data = json;
+      }
+
+      this.schema = data;
+    },
+    fieldSchema(key, schema) {
+      if(schema && typeof schema === 'object' && schema[key]) {
+        return schema[key];
+      } 
+
+      return null;
+    },
+    fieldSchemaType(key, value, schema) {
+      if(schema && typeof schema === 'object' && schema[key] && schema[key].type) {
+        return schema[key].type;
+      } else {
+        const type = typeof value;
+
+        switch(type) {
+          case 'string':            
+          case 'number':
+          case 'bigint':
+            return 'InputField';
+          case 'boolean':
+            return 'CheckboxField';
+          case 'object':
+            return Array.isArray(value) ? "ListField" : "GroupField";          
+        }
+      }
+
+      return 'LiteralField';      
+    },
+    setFieldCollapsed(schema, collapsed) {
+      Vue.set(schema, 'collapsed', collapsed);
+    },
+    setFieldValue(data, key, value) {
+      Vue.set(data, key, value);
+    }
+  },
+  mounted() {
+    this.setJsonData(this.data);
+    this.setData(this.data);
+
+    this.setJsonSchema(this.schema);
+    this.setSchema(this.schema);
+  },
+  provide: function() {
+    return {
+      data: this.data,
+      jsonData: this.jsonData,
+      schema: this.schema,
+      jsonSchema: this.jsonSchema,
+      setJsonData: this.setJsonData,
+      setData: this.setData,
+      setJsonSchema: this.setJsonSchema,
+      setSchema: this.setSchema,
+      fieldSchema: this.fieldSchema,
+      fieldSchemaType: this.fieldSchemaType,
+      setFieldCollapsed: this.setFieldCollapsed,
+      setFieldValue: this.setFieldValue
+    }
+  },
+  components: {
+    BContainer, BFormTextarea, BButton, BForm,
+    'InputField': () => import('./fields/InputField'),
+    'CheckboxField': () => import('./fields/CheckboxField')
+  }
+}
+</script>
