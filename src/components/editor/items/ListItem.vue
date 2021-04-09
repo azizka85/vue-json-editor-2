@@ -45,6 +45,10 @@ import { BDropdown, BDropdownItemButton } from 'bootstrap-vue';
 export default {
   name: "ListItem",
   inject: {
+    dataRoot: {
+      from: 'data',
+      default: null
+    },
     setJsonData: {
       from: 'setJsonData',
       default: () => {}

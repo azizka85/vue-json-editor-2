@@ -52,27 +52,27 @@
               <b-dropdown 
                 size="sm" 
                 variant="outline-primary" 
-                text="Add item"
+                text="Add field"
               >     
                 <b-dropdown-item-button 
                   @click="addItem('')"
                 >
-                  Input item
+                  Input field
                 </b-dropdown-item-button>
                 <b-dropdown-item-button 
                   @click="addItem(false)"
                 >
-                  Checkbox item
+                  Checkbox field
                 </b-dropdown-item-button>
                 <b-dropdown-item-button 
                   @click="addItem([])"
                 >
-                  List item
+                  List field
                 </b-dropdown-item-button>
                 <b-dropdown-item-button
                   @click="addItem({})"
                 >
-                  Group item
+                  Group field
                 </b-dropdown-item-button>
               </b-dropdown>        
             </div>            
@@ -93,21 +93,34 @@ export default {
     showSchema: false,
     data: {
       user: {
-        firstName: '',
-        lastName: '',
-        address: '',
+        firstName: 'Evan',
+        lastName: 'You',
         phone: [
-          '999-999-999',
-          '888-888-888'
+          "999-999-999"
         ]
-      },
-      notes: []
+      }
     },
     jsonData: '',
     schema: {
       user: {
-        description: 'User info',
-        title: "User"
+        title: "User",
+        description: "User Info",
+        items: {
+          firstName: {
+            placeholder: "First Name"
+          },
+          lastName: {
+            placeholder: "Last Name"
+          },
+          phone: {
+            items: {
+              __default__: {
+                placeholder: "Phone Number",
+                format: "tel"
+              }
+            }
+          }
+        }
       }
     },
     jsonSchema: ''
@@ -123,6 +136,35 @@ export default {
         this.data
       );
       this.setJsonData(this.data);
+    },
+    setDataToContent(json, content) {
+      if(content && typeof content === 'object') {
+        let data = null;
+
+        if(typeof json === "string") {
+          try {
+            data = JSON.parse(json);
+          } catch(e) { }
+        } else {
+          data = json;
+        }
+
+        if(data && typeof data === 'object') {
+          Object.keys(content).forEach(key => {
+            if(!data[key]) {
+              delete content[key];
+            }
+          });
+
+          Object.keys(data).forEach(key => {
+            content[key] = data[key];
+          });
+        } else {
+          Object.keys(content).forEach(key => {
+            delete content[key];
+          });
+        }        
+      }
     },
     updateJsonData(json) {
       this.setJsonData(json);
@@ -142,17 +184,7 @@ export default {
       this.jsonData = data;
     },
     setData(json) {
-      let data = null;
-
-      if(typeof json === "string") {
-        try {
-          data = JSON.parse(json);
-        } catch(e) { }
-      } else {
-        data = json;
-      }
-
-      this.data = data;
+      this.setDataToContent(json, this.data);
     },
     updateJsonSchema(json) {
       this.setJsonSchema(json);
@@ -172,61 +204,63 @@ export default {
       this.jsonSchema = data;
     },
     setSchema(json) {
-      let data = null;
-
-      if(typeof json === "string") {
-        try {
-          data = JSON.parse(json);
-        } catch(e) { }
-      } else {
-        data = json;
-      }
-
-      this.schema = data;
+      this.setDataToContent(json, this.schema);
     },
     childSchema(key, schema) {
-      if(schema && typeof schema === 'object' && schema[key]) {
-        return schema[key];
+      if(schema && typeof schema === 'object') {
+        if(schema[key]) {
+          return schema[key];
+        } else if(schema.__default__) {
+          return schema.__default__;
+        }        
       } 
 
       return null;
     },
     fieldSchemaType(key, value, schema) {
-      if(schema && typeof schema === 'object' && schema[key] && schema[key].type) {
-        return schema[key].type;
-      } else {
-        const type = typeof value;
+      if(schema && typeof schema === 'object') {
+        if(schema[key] && schema[key].type) {
+          return schema[key].type;
+        } else if(schema.__default__ && schema.__default__.type)  {
+          return schema.__default__.type;
+        }       
+      } 
 
-        switch(type) {
-          case 'string':            
-          case 'number':
-          case 'bigint':
-            return 'InputField';
-          case 'boolean':
-            return 'CheckboxField';
-          case 'object':
-            return Array.isArray(value) ? "ListField" : "GroupField";          
-        }
+      const type = typeof value;
+
+      switch(type) {
+        case 'string':            
+        case 'number':
+        case 'bigint':
+          return 'InputField';
+        case 'boolean':
+          return 'CheckboxField';
+        case 'object':
+          return Array.isArray(value) ? "ListField" : "GroupField";          
       }
 
       return 'LiteralField';      
     },
     itemSchemaType(key, value, schema) {
-      if(schema && typeof schema === 'object' && schema[key] && schema[key].type) {
-        return schema[key].type;
-      } else {
-        const type = typeof value;
+      if(schema && typeof schema === 'object') {
+        if(schema[key] && schema[key].type) {
+          return schema[key].type;
+        } else if(schema.__default__ && schema.__default__.type)  {
+          return schema.__default__.type;
+        }       
+      }
 
-        switch(type) {
-          case 'string':            
-          case 'number':
-          case 'bigint':
-            return 'InputItem';
-          case 'boolean':
-            return 'CheckboxItem';
-          case 'object':
-            return Array.isArray(value) ? "ListItem" : "GroupItem";          
-        }
+      const type = typeof value;
+
+      switch(type) {
+        case 'string':            
+        case 'number':
+        case 'bigint':
+          return 'InputItem';
+        case 'boolean':
+          return 'CheckboxItem';
+        case 'object':
+          return Array.isArray(value) ? "ListItem" : "GroupItem";          
       }
 
       return 'LiteralItem'; 
