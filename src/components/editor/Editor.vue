@@ -43,6 +43,39 @@
               :name="key"
               :value="value"
             />
+            <div class="d-inline-flex">
+              <b-form-input
+                ref="fieldNameInput"          
+                placeholder="Field name" 
+                class="mr-2"         
+              />
+              <b-dropdown 
+                size="sm" 
+                variant="outline-primary" 
+                text="Add item"
+              >     
+                <b-dropdown-item-button 
+                  @click="addItem('')"
+                >
+                  Input item
+                </b-dropdown-item-button>
+                <b-dropdown-item-button 
+                  @click="addItem(false)"
+                >
+                  Checkbox item
+                </b-dropdown-item-button>
+                <b-dropdown-item-button 
+                  @click="addItem([])"
+                >
+                  List item
+                </b-dropdown-item-button>
+                <b-dropdown-item-button
+                  @click="addItem({})"
+                >
+                  Group item
+                </b-dropdown-item-button>
+              </b-dropdown>        
+            </div>            
           </b-form>
         </template>
       </div>
@@ -52,7 +85,7 @@
 
 <script>
 import Vue from 'vue';
-import { BContainer, BFormTextarea, BButton, BForm } from 'bootstrap-vue';
+import { BContainer, BFormTextarea, BButton, BForm, BFormInput, BDropdown, BDropdownItemButton } from 'bootstrap-vue';
 
 export default {
   name: 'Editor',
@@ -63,26 +96,12 @@ export default {
         firstName: '',
         lastName: '',
         address: '',
-        phoneDictionary: {
-          phone1: '',
-          phone2: ''
-        },
-        phoneList: [
+        phone: [
           '999-999-999',
           '888-888-888'
         ]
       },
-      notes: [
-        'Hey',
-        'Hi',
-        'Whatsup',
-        {
-          note1: 'Note 1',
-          note2: 'Note 2'
-        }
-      ],
-      title: '',
-      agree: false
+      notes: []
     },
     jsonData: '',
     schema: {
@@ -96,6 +115,14 @@ export default {
   methods: {
     toggleShowSchema() {
       this.showSchema = !this.showSchema;
+    },
+    addItem(item) {
+      this.addItemInGroup(
+        this.$refs.fieldNameInput.$el.value,
+        item,
+        this.data
+      );
+      this.setJsonData(this.data);
     },
     updateJsonData(json) {
       this.setJsonData(json);
@@ -209,6 +236,12 @@ export default {
     },
     setFieldValue(data, key, value) {      
       Vue.set(data, key, value);      
+    },
+    addItemInList(item, list) {
+      list.push(item);
+    },
+    addItemInGroup(key, item, group) {
+      Vue.set(group, key, item);
     }
   },
   mounted() {
@@ -232,11 +265,13 @@ export default {
       fieldSchemaType: this.fieldSchemaType,
       itemSchemaType: this.itemSchemaType,
       setFieldCollapsed: this.setFieldCollapsed,
-      setFieldValue: this.setFieldValue
+      setFieldValue: this.setFieldValue,
+      addItemInList: this.addItemInList,
+      addItemInGroup: this.addItemInGroup
     }
   },
   components: {
-    BContainer, BFormTextarea, BButton, BForm,
+    BContainer, BFormTextarea, BButton, BForm, BFormInput, BDropdown, BDropdownItemButton,
     'LiteralField': () => import('./fields/LiteralField'),
     'InputField': () => import('./fields/InputField'),
     'CheckboxField': () => import('./fields/CheckboxField'),

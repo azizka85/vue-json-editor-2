@@ -17,31 +17,63 @@
       </b-tooltip>       
     </h6>
     <b-collapse :visible="!collapsed">     
-      <div>
         <component 
           v-for="(item, index) in value"
           :key="index"
-          :is="itemSchemaType(index, item, schema ? schema.child : null)"
+          :is="itemSchemaType(index, item, schema ? schema.items : null)"
           :data="value"
-          :schema="childSchema(index, schema ? schema.child : null)"
+          :schema="childSchema(index, schema ? schema.items : null)"
           :field="name"
           :name="'' + index"
           :value="item"
         />
-      </div>                              
+        <b-dropdown 
+          size="sm" 
+          variant="outline-primary" 
+          text="Add item"
+        >     
+          <b-dropdown-item-button 
+            @click="addItem('')"
+          >
+            Input item
+          </b-dropdown-item-button>
+          <b-dropdown-item-button 
+            @click="addItem(false)"
+          >
+            Checkbox item
+          </b-dropdown-item-button>
+          <b-dropdown-item-button 
+            @click="addItem([])"
+          >
+            List item
+          </b-dropdown-item-button>
+          <b-dropdown-item-button
+            @click="addItem({})"
+          >
+            Group item
+          </b-dropdown-item-button>
+        </b-dropdown>   
     </b-collapse>
   </div>  
 </template>
 
 <script>
-import { BIconChevronDown, BIconInfoCircle, BCollapse, BTooltip } from 'bootstrap-vue';
+import { BIconChevronDown, BIconInfoCircle, BCollapse, BTooltip, BDropdown, BDropdownItemButton } from 'bootstrap-vue';
 
 export default {
   name: "ListField",
   inject: {
+    dataRoot: {
+      from: 'data',
+      default: null
+    },
     schemaRoot: {
       from: 'schema',
       default: null
+    },
+    setJsonData: {
+      from: 'setJsonData',
+      default: () => {}
     },
     setJsonSchema: {
       from: 'setJsonSchema',
@@ -57,6 +89,10 @@ export default {
     },
     setFieldCollapsed: {
       from: 'setFieldCollapsed',
+      default: () => {}
+    },
+    addItemInList: {
+      from: 'addItemInList',
       default: () => {}
     }
   },
@@ -83,10 +119,14 @@ export default {
       } else {
         this.isCollapsed = !this.isCollapsed;
       }
+    },
+    addItem(item) {
+      this.addItemInList(item, this.value);
+      this.setJsonData(this.dataRoot);
     }
   },
   components: {
-    BIconChevronDown, BIconInfoCircle, BCollapse, BTooltip,
+    BIconChevronDown, BIconInfoCircle, BCollapse, BTooltip, BDropdown, BDropdownItemButton,
     'LiteralItem': () => import('../items/LiteralItem'),
     'InputItem': () => import('../items/InputItem'),
     'CheckboxItem': () => import('../items/CheckboxItem'),
