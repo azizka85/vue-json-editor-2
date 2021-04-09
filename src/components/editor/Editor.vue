@@ -1,5 +1,5 @@
 <template>
-  <b-container>
+  <b-container fluid>
     <div class="ml-2 mr-2 mb-2 mt-2 d-flex flex-lg-row flex-column-reverse">
       <div class="mr-lg-1 mt-2 mt-lg-0 col-lg-8 d-flex flex-column">
         <h5>JSON Output</h5>
@@ -39,7 +39,7 @@
               :key="key"
               :is="fieldSchemaType(key, value, schema)"
               :data="data"
-              :schema="fieldSchema(key, schema)"
+              :schema="childSchema(key, schema)"
               :name="key"
               :value="value"
             />
@@ -59,12 +59,36 @@ export default {
   data: () => ({
     showSchema: false,
     data: {
-      name: false
+      user: {
+        firstName: '',
+        lastName: '',
+        address: '',
+        phoneDictionary: {
+          phone1: '',
+          phone2: ''
+        },
+        phoneList: [
+          '999-999-999',
+          '888-888-888'
+        ]
+      },
+      notes: [
+        'Hey',
+        'Hi',
+        'Whatsup',
+        {
+          note1: 'Note 1',
+          note2: 'Note 2'
+        }
+      ],
+      title: '',
+      agree: false
     },
     jsonData: '',
     schema: {
-      name: {
-        description: 'Helo'
+      user: {
+        description: 'User info',
+        title: "User"
       }
     },
     jsonSchema: ''
@@ -133,7 +157,7 @@ export default {
 
       this.schema = data;
     },
-    fieldSchema(key, schema) {
+    childSchema(key, schema) {
       if(schema && typeof schema === 'object' && schema[key]) {
         return schema[key];
       } 
@@ -160,11 +184,31 @@ export default {
 
       return 'LiteralField';      
     },
+    itemSchemaType(key, value, schema) {
+      if(schema && typeof schema === 'object' && schema[key] && schema[key].type) {
+        return schema[key].type;
+      } else {
+        const type = typeof value;
+
+        switch(type) {
+          case 'string':            
+          case 'number':
+          case 'bigint':
+            return 'InputItem';
+          case 'boolean':
+            return 'CheckboxItem';
+          case 'object':
+            return Array.isArray(value) ? "ListItem" : "GroupItem";          
+        }
+      }
+
+      return 'LiteralItem'; 
+    },
     setFieldCollapsed(schema, collapsed) {
       Vue.set(schema, 'collapsed', collapsed);
     },
-    setFieldValue(data, key, value) {
-      Vue.set(data, key, value);
+    setFieldValue(data, key, value) {      
+      Vue.set(data, key, value);      
     }
   },
   mounted() {
@@ -184,16 +228,20 @@ export default {
       setData: this.setData,
       setJsonSchema: this.setJsonSchema,
       setSchema: this.setSchema,
-      fieldSchema: this.fieldSchema,
+      childSchema: this.childSchema,
       fieldSchemaType: this.fieldSchemaType,
+      itemSchemaType: this.itemSchemaType,
       setFieldCollapsed: this.setFieldCollapsed,
       setFieldValue: this.setFieldValue
     }
   },
   components: {
     BContainer, BFormTextarea, BButton, BForm,
+    'LiteralField': () => import('./fields/LiteralField'),
     'InputField': () => import('./fields/InputField'),
-    'CheckboxField': () => import('./fields/CheckboxField')
+    'CheckboxField': () => import('./fields/CheckboxField'),
+    'GroupField': () => import('./fields/GroupField'),
+    'ListField': () => import('./fields/ListField')
   }
 }
 </script>
