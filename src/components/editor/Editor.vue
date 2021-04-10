@@ -95,6 +95,7 @@ export default {
       user: {
         firstName: 'Evan',
         lastName: 'You',
+        address: 'Jupiter',
         phone: [
           "999-999-999"
         ]
@@ -119,6 +120,9 @@ export default {
                 format: "tel"
               }
             }
+          },
+          __default__: {
+            format: "text"
           }
         }
       }
